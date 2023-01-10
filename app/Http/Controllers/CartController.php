@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreCartRequest;
 use App\Http\Requests\UpdateCartRequest;
@@ -16,9 +17,13 @@ class CartController extends Controller
      */
     public function index(Request $request)
     {
-        $carts = $request->user()->carts->load('product');
+        if($request->query('count')){
+            $data = $request->user()->carts->load('product')->count();
+        }else{
+            $data = $request->user()->carts->load('product');
+        }
 
-        return response()->json($carts, 200);
+        return response()->json($data, 200);
     }
 
     /**
@@ -52,11 +57,12 @@ class CartController extends Controller
              if($cartFound) {
                  continue;
              }else {
+                $product = Product::find($item['product_id']);
                  Cart::create([
                      'product_id' => $item['product_id'],
                      'user_id' => $userId,
-                     'price' => $item['price'],
-                     'title' => $item['title'],
+                     'price' => $product->price,
+                     'title' => $product->title,
                      'quantity' => $item['quantity']
                  ]);
              }
@@ -109,4 +115,6 @@ class CartController extends Controller
     {
         //
     }
+
+
 }
